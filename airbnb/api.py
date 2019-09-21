@@ -223,7 +223,6 @@ class Api(object):
 
         return r.json()
 
-
     # Host APIs
 
     @require_auth
@@ -241,6 +240,37 @@ class Api(object):
 
         r = self._session.get(API_URL + "/calendars/{}/{}/{}".format(
             str(listing_id), starting_date_str, ending_date_str), params=params)
+        r.raise_for_status()
+
+        return r.json()
+
+    @require_auth
+    def get_threads_full(self, offset=0, limit=20):
+        """
+        Gets messaging threads.
+        """
+        params = {
+            '_format': 'for_messaging_sync_with_posts',
+            '_limit': str(limit),
+            '_offset': str(offset),
+        }
+
+        r = self._session.get(API_URL + "/threads", params=params)
+        r.raise_for_status()
+
+        return r.json()
+
+    @require_auth
+    def send_message(self, thread_id, message):
+        """
+        Sends a message in a thread.
+        """
+        body = {
+            "thread_id": thread_id,
+            "message": message.strip(),
+        }
+
+        r = self._session.post(API_URL + "/messages", data=json.dumps(body))
         r.raise_for_status()
 
         return r.json()
@@ -286,7 +316,8 @@ class Api(object):
             '_format': 'for_trip_day_view'
         }
 
-        r = self._session.get(API_URL + "/scheduled_plans/{}".format(identifier), params=params)
+        r = self._session.get(
+            API_URL + "/scheduled_plans/{}".format(identifier), params=params)
         r.raise_for_status()
 
         return r.json()['scheduled_plan']
@@ -299,14 +330,16 @@ class Api(object):
             '_format': 'for_trip_planner'
         }
 
-        r = self._session.get(API_URL + "/reservations/{}".format(reservation_id), params=params)
+        r = self._session.get(
+            API_URL + "/reservations/{}".format(reservation_id), params=params)
         r.raise_for_status()
 
         return r.json()['reservation']
 
     @require_auth
     def get_all_past_reservations(self):
-        past_scheduled_plan_ids = self.get_travel_plans()['past_scheduled_plans']['metadata']['cache']['identifiers']
+        past_scheduled_plan_ids = self.get_travel_plans(
+        )['past_scheduled_plans']['metadata']['cache']['identifiers']
 
         past_reservations = []
         for plan_id in past_scheduled_plan_ids:
@@ -385,7 +418,8 @@ class Api(object):
             'children': '0'
         }
 
-        r = self._session.get(API_URL + '/pdp_listing_details/' + str(listing_id), params=params)
+        r = self._session.get(
+            API_URL + '/pdp_listing_details/' + str(listing_id), params=params)
         r.raise_for_status()
 
         return r.json()
